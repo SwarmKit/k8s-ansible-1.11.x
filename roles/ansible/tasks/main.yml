@@ -1,11 +1,11 @@
 # 準備集群所需的所有二進制文件（cfssl/etcd/flannel/kubernetes）
 ---
-- name: 刪除 /opt/kubernetes/data 文件夾
+- name: 刪除/opt/kubernetes/data 文件夾
   file: 
     path=/opt/kubernetes 
     state=absent
 
-- name: 創建 /opt/kubernetes/data 文件夾
+- name: 創建/opt/kubernetes/data 文件夾
   file:      
     path=/opt/kubernetes/data/{{item}}
     state=directory
@@ -14,50 +14,105 @@
   - cfssl
   - flannel
 
-- name: 下載 {{CFSSL_URL}}
+- name: 下載{{CFSSL_URL}}
   get_url:
     url={{CFSSL_URL}}
     dest={{CFSSL_DIR}}/cfssl_linux-amd64
     mode=0740
 
-- name: 下載 {{CFSSLJSON_URL}}
+- name: 下載{{CFSSLJSON_URL}}
   get_url:
     url={{CFSSLJSON_URL}}
     dest={{CFSSL_DIR}}/cfssljson_linux-amd64
     mode=0740
  
-- name: 下載 {{CFSSLCERTINFO_URL}}
+- name: 下載{{CFSSLCERTINFO_URL}}
   get_url:
     url={{CFSSLCERTINFO_URL}}
     dest={{CFSSL_DIR}}/cfssl-certinfo_linux-amd64
     mode=0740
     
-- name: 下載並解壓 ETCD {{ETCD_URL}} 二進制安裝包
+- name: 下載並解壓ETCD {{ETCD_URL}} 二進制安裝包
   unarchive:
     src={{ETCD_URL}}
     dest={{DATA_DIR}}
     remote_src=yes
  
-- name: 下載並解壓 FLANNEL {{FLANNEL_URL}} 二進制安裝包
+- name: 下載並解壓FLANNEL {{FLANNEL_URL}} 二進制安裝包
   unarchive:
     src={{FLANNEL_URL}}
     dest={{FLANNEL_DIR}}
     remote_src=yes
 
-- name: 下載並解壓 DOCKER {{DOCKER_URL}} 二進制安裝包
+- name: 下載並解壓DOCKER {{DOCKER_URL}} 二進制安裝包
   unarchive:
     src={{DOCKER_URL}}
     dest={{DATA_DIR}}
     remote_src=yes
 
-- name: 下載並解壓 KUBERNETES CLIENT {{KUBE_CLIENT_URL}} 二進制安裝包
+- name: 下載並解壓KUBERNETES CLIENT {{KUBE_CLIENT_URL}} 二進制安裝包
   unarchive:
     src={{KUBE_CLIENT_URL}}
     dest={{DATA_DIR}}
     remote_src=yes
 
-- name: 下載並解壓 KUBERNETES SERVER {{KUBE_SERVER_URL}} 二進制安裝包
+- name: 下載並解壓KUBERNETES SERVER {{KUBE_SERVER_URL}} 二進制安裝包
   unarchive:
     src={{KUBE_SERVER_URL}}
     dest={{DATA_DIR}}
     remote_src=yes
+    
+- name: 創建{{BIN_DIR}}目錄
+  file: 
+    dest={{BIN_DIR}} 
+    state=directory mode=0740
+
+- name: 複製CFSSL二進制執行文件
+  copy: 
+    src={{CFSSL_DIR}}/{{item.src}} 
+    dest={{BIN_DIR}}/{{item.dest}} 
+    mode=0540
+  with_items:
+  - { src: 'cfssl_linux-amd64', dest: 'cfssl' } 
+  - { src: 'cfssljson_linux-amd64', dest: 'cfssljson' } 
+  - { src: 'cfssl-certinfo_linux-amd64', dest: 'cfssl-certinfo' }
+
+- name: 創建CA證書配置文件
+  template:
+    src=ca-config.json.j2
+    dest=./ca-config.json
+  run_once: true
+
+- name: 創建CA證書請求文件
+  template:
+    src=ca-csr.json.j2
+    dest=./ca-csr.json
+  run_once: true
+
+- name: 生成CA證書和私鑰
+  shell: "{{BIN_DIR}}/cfssl gencert -initca ca-csr.json | {{BIN_DIR}}/cfssljson -bare ca"
+  run_once: true
+
+- name: 獲取CA證書到Deploy主機
+  fetch:
+    src=/root/{{item}}
+    dest=/opt/kubernetes/data/ca/{{item}}
+    flat=yes
+  with_items:
+  - ca-config.json
+  - ca.csr
+  - ca-csr.json
+  - ca-key.pem
+  - ca.pem 
+
+- name: 刪除臨時文件
+  file:
+    path="{{item}}"
+    state=absent
+  with_items:
+  - ca-config.json
+  - ca.csr
+  - ca-csr.json
+  - ca-key.pem
+  - ca.pem
+  run_once: true

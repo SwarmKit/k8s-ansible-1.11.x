@@ -46,7 +46,7 @@ $su -
 在ansible master主機home目錄下git clone下載代碼，修改相關配置
 ```
 #cd /root
-#git clone https://github.com/SwarmKit/kubernetes-ansible.git
+#git clone https://github.com/SwarmKit/k8s-ansible-1.11.x.git
 #cd kubernetes-ansible
 ```
 根據實際虛擬機器環境修改hosts文件中的etcd、master、node主機的IP位址

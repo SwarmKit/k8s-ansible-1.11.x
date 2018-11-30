@@ -7,43 +7,44 @@ DATA_DIR: /opt/kubernetes/data
 #集群日誌目錄
 LOG_DIR: /var/log/kubernetes
 
+# Kubernetes 各個服務配置目錄
 CONF_DIR: /etc/kubernetes/cfg
 
 #集群主機flannel網路主介面(默認eth0)
 HOST_INTERFACE: eth0
 
 # cfssl配置
-CFSSL_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/cfssl_linux-amd64"
-CFSSLJSON_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/cfssljson_linux-amd64"
-CFSSLCERTINFO_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/cfssl-certinfo_linux-amd64"
+CFSSL_URL: "http://mirror.xx.com/opensource/kubernetes-ansible/tools/cfssl_linux-amd64"
+CFSSLJSON_URL: "http://mirror.xx.com/opensource/kubernetes-ansible/tools/cfssljson_linux-amd64"
+CFSSLCERTINFO_URL: "http://mirror.xx.com/opensource/kubernetes-ansible/tools/cfssl-certinfo_linux-amd64"
 CFSSL_DIR: "{{DATA_DIR}}/cfssl"
 
 CA_DIR: "{{DATA_DIR}}/ca"
 
 # etcd配置(需要與ansible inventory檔內容同步)
 
-ETCD_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/etcd-v3.3.7-linux-amd64.tar.gz"
+ETCD_URL: "http://mirror.xx.com/opensource/kubernetes-ansible/tools/etcd-v3.3.7-linux-amd64.tar.gz"
 ETCD_DIR: "{{DATA_DIR}}/etcd-v3.3.7-linux-amd64"
 
 # flanneld配置
-FLANNEL_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/flannel-v0.10.0-linux-amd64.tar.gz"
+FLANNEL_URL: "http://mirror.xx.com/opensource/kubernetes-ansible/tools/flannel-v0.10.0-linux-amd64.tar.gz"
 FLANNEL_DIR: "{{DATA_DIR}}/flannel"
 
 FLANNEL_ETCD_PREFIX: /kubernetes/network
 FLANNEL_ETCD_CONFIG: "{'Network':'{{CLUSTER_CIDR}}', 'SubnetLen': 24, 'Backend': {'Type': 'vxlan}}"
 
 # docker配置
-#DOCKER_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/docker-18.03.1-ce.tgz"
-DOCKER_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/docker-17.03.2-ce.tgz"
+#DOCKER_URL: "http://mirror.xx.com/opensource/kubernetes-ansible/tools/docker-18.03.1-ce.tgz"
+DOCKER_URL: "http://mirror.xx.com/opensource/kubernetes-ansible/tools/docker-17.03.2-ce.tgz"
 DOCKER_DIR: "{{DATA_DIR}}/docker"
 
 # Kubernetes 配置
 MASTER_IP: 10.206.30.188
 
-KUBE_CLIENT_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/kubernetes/v1.11.4/kubernetes-client-linux-amd64.tar.gz"
+KUBE_CLIENT_URL: "http://mirror.xx.com/opensource/kubernetes-ansible/kubernetes/v1.11.4/kubernetes-client-linux-amd64.tar.gz"
 KUBE_CLIENT_DIR: "{{DATA_DIR}}/kubernetes/client/bin"
 
-KUBE_SERVER_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/kubernetes/v1.11.4/kubernetes-server-linux-amd64.tar.gz"
+KUBE_SERVER_URL: "http://mirror.xx.com/opensource/kubernetes-ansible/kubernetes/v1.11.4/kubernetes-server-linux-amd64.tar.gz"
 KUBE_SERVER_DIR: "{{DATA_DIR}}/kubernetes/server/bin"
 
 KUBE_CLIENT_CONFIG: "{{DATA_DIR}}/kube_client_config"

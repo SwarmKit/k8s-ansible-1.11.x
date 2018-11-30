@@ -6,6 +6,8 @@
   - /root/.kube
   - /etc/cni/net.d
   - /var/log/kubernetes
+  - /var/lib/kubelet
+  - /var/lib/kube-proxy
   
 - name: 複製kubectl二進制文件
   copy:
@@ -42,11 +44,6 @@
   template:
     src=kubelet.config.json.j2
     dest=/etc/kubernetes/kubelet.config.json
-
-- name: 創建/var/lib/kubelet目錄
-  file:
-    dest=/var/lib/kubelet
-    state=directory
 
 - name: 創建kubelet.service文件
   template:
@@ -104,11 +101,6 @@
     src=kube-proxy.config.yaml.j2
     dest=/etc/kubernetes/kube-proxy.config.yaml
 
-- name: 創建/var/lib/kube-proxy目錄
-  file:
-    dest=/var/lib/kube-proxy
-    state=directory
-
 - name: 創建kube-proxy.service文件
   template:
     src=kube-proxy.service.j2
@@ -146,3 +138,4 @@
   - kube-proxy-csr.json
   - kube-proxy.pem
   - kube-proxy-key.pem
+  - kubelet-bootstrap-{{KUBE_NAME}}.kubeconfig
