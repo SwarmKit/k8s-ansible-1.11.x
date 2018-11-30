@@ -1,0 +1,88 @@
+##
+# --logtostderr=true: log to standard error instead of files
+KUBE_LOGTOSTDERR="--logtostderr=false"
+
+# --log-dir=/var/log/kubernetes: log Direvtory
+KUBE_LOG_DIR="--log-dir=/var/log/kubernetes"
+
+# --v=0: log level for V logs
+KUBE_LOG_LEVEL="--v=2"
+
+# --etcd-servers=[]: List of etcd servers to watch (http://ip:port),
+# comma separated. Mutually exclusive with -etcd-config
+KUBE_ETCD_SERVERS="--etcd-servers={{ETCD_ENDPOINTS}}"
+
+# --etcd-cafile="": SSL Certificate Authority file used to secure etcd communication.
+KUBE_ETCD_CAFILE="--etcd-cafile=/etc/kubernetes/ssl/ca.pem"
+
+# --etcd-certfile="": SSL certification file used to secure etcd communication.
+KUBE_ETCD_CERTFILE="--etcd-certfile=/etc/kubernetes/ssl/kubernetes.pem"
+
+# --etcd-keyfile="": key file used to secure etcd communication.
+KUBE_ETCD_KEYFILE="--etcd-keyfile=/etc/kubernetes/ssl/kubernetes-key.pem"
+
+# --insecure-port=8080: The port on which to serve unsecured, unauthenticated access.
+KUBE_API_PORT="--insecure-port=8080"
+
+# --advertise-address=<nil>: The IP address on which to advertise
+# the apiserver to members of the cluster.
+KUBE_ADVERTISE_ADDR="--advertise-address={{ inventory_hostname }}"
+
+# --allow-privileged=false: If true, allow privileged containers.
+KUBE_ALLOW_PRIV="--allow-privileged=true"
+
+# --service-cluster-ip-range=<nil>: A CIDR notation IP range from which to assign service cluster IPs.
+# This must not overlap with any IP ranges assigned to nodes for pods.
+KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ SERVICE_CIDR }}"
+
+# --admission-control="AlwaysAdmit": Ordered list of plug-ins
+# to do admission control of resources into cluster.
+# Comma-delimited list of:
+#   LimitRanger, AlwaysDeny, SecurityContextDeny, NamespaceExists,
+#   NamespaceLifecycle, NamespaceAutoProvision, AlwaysAdmit,
+#   ServiceAccount, DefaultStorageClass, DefaultTolerationSeconds, ResourceQuota
+# Mark Deprecated. Use --enable-admission-plugins or --disable-admission-plugins instead since v1.10.
+# It will be removed in a future version.
+KUBE_ADMISSION_CONTROL="--enable-admission-plugins=ServiceAccount,NamespaceLifecycle,NamespaceExists,LimitRanger,ResourceQuota,NodeRestriction"
+
+# --client-ca-file="": If set, any request presenting a client certificate signed
+# by one of the authorities in the client-ca-file is authenticated with an identity
+# corresponding to the CommonName of the client certificate.
+KUBE_API_CLIENT_CA_FILE="--client-ca-file=/etc/kubernetes/ssl/ca.pem"
+
+# --tls-cert-file="": File containing x509 Certificate for HTTPS.  (CA cert, if any,
+# concatenated after server cert). If HTTPS serving is enabled, and --tls-cert-file
+# and --tls-private-key-file are not provided, a self-signed certificate and key are
+# generated for the public address and saved to /var/run/kubernetes.
+KUBE_API_TLS_CERT_FILE="--tls-cert-file=/etc/kubernetes/ssl/kubernetes.pem"
+
+# --tls-private-key-file="": File containing x509 private key matching --tls-cert-file.
+KUBE_API_TLS_PRIVATE_KEY_FILE="--tls-private-key-file=/etc/kubernetes/ssl/kubernetes-key.pem"
+
+## Add your own!
+KUBE_API_ARGS="--authorization-mode=Node,RBAC \
+--experimental-encryption-provider-config=/etc/kubernetes/cfg/encryption-config.yaml \
+--bind-address={{ inventory_hostname }} \
+--insecure-bind-address=127.0.0.1 \
+--enable-bootstrap-token-auth \
+--kubelet-https=true \
+--kubelet-client-certificate=/etc/kubernetes/ssl/kubernetes.pem \
+--kubelet-client-key=/etc/kubernetes/ssl/kubernetes-key.pem \
+--kubelet-timeout=6s \
+--anonymous-auth=false \
+--service-node-port-range=30000-32767 \
+--service-account-key-file=/etc/kubernetes/ssl/ca-key.pem \
+--enable-swagger-ui=true \
+--apiserver-count=2 \
+--endpoint-reconciler-type=lease \
+--audit-log-maxage=30 \
+--audit-log-maxbackup=3 \
+--audit-log-maxsize=100 \
+--audit-log-path=/var/lib/audit.log \
+--requestheader-client-ca-file=/etc/kubernetes/ssl/ca.pem \
+--requestheader-allowed-names= \
+--requestheader-extra-headers-prefix=X-Remote-Extra- \
+--requestheader-group-headers=X-Remote-Group \
+--requestheader-username-headers=X-Remote-User \
+--runtime-config=api/all=true \
+--event-ttl=1h"

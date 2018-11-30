@@ -1,0 +1,52 @@
+---
+- name: 創建 {{BIN_DIR}} 目錄
+  file:
+    dest={{BIN_DIR}} 
+    state=directory mode=0740
+
+- name: 修改 iptables FORWARD chain的默認策略設置
+  iptables:
+    chain=FORWARD
+    policy=ACCEPT
+
+- name: 保存 iptables 規則配置
+  command: iptables-save
+
+- name: 複製 docker 二進制執行文件
+  copy:
+    src={{DOCKER_DIR}}/{{item}} 
+    dest={{BIN_DIR}}/{{item}} 
+    mode=0540
+  with_items:
+  - docker
+  - dockerd
+  - docker-init
+  - docker-proxy
+  - docker-runc
+  - docker-containerd
+  - docker-containerd-ctr
+  - docker-containerd-shim
+ 
+- name: 創建 /etc/docker 目錄
+  file:
+    dest=/etc/docker
+    state=directory
+
+- name: 創建 docker-daemon.json.j2 文件
+  template:
+    src=docker-daemon.json.j2
+    dest=/etc/docker/daemon.json
+
+- name: 創建 docker.service 文件
+  template:
+    src=docker.service.j2
+    dest=/etc/systemd/system/docker.service
+
+- name: 重新加載 systemd
+  command: systemctl daemon-reload
+
+- name: 啟動 docker
+  service: 
+    name=docker
+    state=restarted
+    enabled=yes

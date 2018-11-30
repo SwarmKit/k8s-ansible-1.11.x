@@ -1,0 +1,56 @@
+# 創建集群證書文件
+---
+- name: 創建 {{BIN_DIR}} 目錄
+  file: 
+    dest={{BIN_DIR}} 
+    state=directory mode=0740
+
+- name: 複製 CFSSL二進制執行文件
+  copy: 
+    src={{CFSSL_DIR}}/{{item.src}} 
+    dest={{BIN_DIR}}/{{item.dest}} 
+    mode=0540
+  with_items:
+  - { src: 'cfssl_linux-amd64', dest: 'cfssl' } 
+  - { src: 'cfssljson_linux-amd64', dest: 'cfssljson' } 
+  - { src: 'cfssl-certinfo_linux-amd64', dest: 'cfssl-certinfo' }
+
+- name: 創建 ca-config.json文件
+  template:
+    src=ca-config.json.j2
+    dest=./ca-config.json
+  run_once: true
+
+- name: 創建 ca-csr.json文件
+  template:
+    src=ca-csr.json.j2
+    dest=./ca-csr.json
+  run_once: true
+
+- name: 生成 CA 證書和私鑰
+  shell: "{{BIN_DIR}}/cfssl gencert -initca ca-csr.json | {{BIN_DIR}}/cfssljson -bare ca"
+  run_once: true
+
+- name: 獲取CA證書到 Ansible
+  fetch:
+    src=/root/{{item}}
+    dest=/opt/kubernetes/data/ca/{{item}}
+    flat=yes
+  with_items:
+  - ca-config.json
+  - ca.csr
+  - ca-csr.json
+  - ca-key.pem
+  - ca.pem 
+
+- name: 清除臨時文件
+  file:
+    path="{{item}}"
+    state=absent
+  with_items:
+  - ca-config.json
+  - ca.csr
+  - ca-csr.json
+  - ca-key.pem
+  - ca.pem
+  run_once: true

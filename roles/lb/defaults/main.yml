@@ -1,0 +1,13 @@
+# 區分多個instance的VRRP組播，同網段不能重複，取值在0-255之間
+# 因專案已設置vrrp報文單播模式，所以這個ROUTER_ID 即便同網段裡面有重複也沒關係
+ROUTER_ID: 156
+
+# haproxy負載均衡演算法，常見如下：
+# "roundrobin": 基於伺服器權重的輪詢
+# "leastconn": 基於伺服器最小連接數
+# "source": 基於請求源IP位址
+# "uri": 基於請求的URI
+BALANCE_ALG: "roundrobin"
+
+# 啟用 ingress NodePort服務的負載均衡 (yes/no)
+INGRESS_NODEPORT_LB: "no"

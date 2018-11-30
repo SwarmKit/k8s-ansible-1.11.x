@@ -1,0 +1,3 @@
+# 根據etcd組成員自動生成ETCD_ENDPOINTS
+TMP_NODES: "{% for h in groups['etcd'] %}https://{{ h }}:2379,{% endfor %}"
+ETCD_ENDPOINTS: "{{ TMP_NODES.rstrip(',') }}"

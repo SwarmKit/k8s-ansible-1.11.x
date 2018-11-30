@@ -1,0 +1,32 @@
+[deploy]
+10.206.30.181
+
+[etcd]
+10.206.30.184 NODE_NAME=etcd01
+10.206.30.185 NODE_NAME=etcd02
+10.206.30.186 NODE_NAME=etcd03
+
+[lb]
+10.206.30.182 LB_IF="eth0" LB_ROLE=master
+10.206.30.183 LB_IF="eth0" LB_ROLE=backup
+
+[flannel:children]
+kube-master
+kube-node
+
+[kube:children]
+kube-master
+kube-node
+
+[kube-master]
+10.206.30.182 KUBE_NAME=k8s-m01
+10.206.30.183 KUBE_NAME=k8s-m02
+
+[kube-node]
+10.206.30.184 KUBE_NAME=k8s-s01
+10.206.30.185 KUBE_NAME=k8s-s02
+10.206.30.186 KUBE_NAME=k8s-s03
+
+[new-master]
+
+[new-node]

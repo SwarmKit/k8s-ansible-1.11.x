@@ -1,0 +1,49 @@
+- name: 安裝 haproxy
+  yum: name=haproxy state=latest
+
+- name: 創建 haproxy配置目錄
+  file: name=/etc/haproxy state=directory
+
+- name: 修改 CentOS hapeoxy服務文件 
+  template: src=haproxy.service.j2 dest=/usr/lib/systemd/system/haproxy.service
+  tags: restart_lb
+
+- name: 配置haproxy
+  template: src=haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg
+  tags: restart_lb
+
+- name: 安裝 keepalived
+  yum: name=keepalived state=latest
+
+- name: 創建 keepalived配置目錄
+  file: name=/etc/keepalived state=directory
+
+- name: 配置 keepalived主節點
+  template: src=keepalived-master.conf.j2 dest=/etc/keepalived/keepalived.conf
+  when: LB_ROLE == "master"
+  tags: restart_lb
+
+- name: 配置 keepalived備節點
+  template: src=keepalived-backup.conf.j2 dest=/etc/keepalived/keepalived.conf
+  when: LB_ROLE == "backup"
+  tags: restart_lb
+
+- name: 加載daemon-reload服務
+  shell: systemctl daemon-reload
+  tags: restart_lb
+
+- name: 開機自啟haproxy服務
+  shell: systemctl enable haproxy
+  ignore_errors: true 
+
+- name: 重啟 haproxy服務
+  shell: systemctl restart haproxy
+  tags: restart_lb
+
+- name: 開機自啟 keepalived服務
+  shell: systemctl enable keepalived
+  ignore_errors: true
+
+- name: 重啟 keepalived服務
+  shell: systemctl restart keepalived
+  tags: restart_lb

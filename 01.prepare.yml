@@ -1,0 +1,4 @@
+# 配置安裝基礎軟件包及設置OS環境參數
+- hosts: ansible,kube
+  roles:
+  - prepare

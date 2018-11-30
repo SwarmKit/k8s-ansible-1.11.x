@@ -1,0 +1,9 @@
+# a安裝etcd 集群
+---
+- hosts: etcd
+  gather_facts: False
+  remote_user: root
+  become: yes
+  become_method: sudo
+  roles:
+  - etcd

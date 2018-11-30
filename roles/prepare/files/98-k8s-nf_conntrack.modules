@@ -1,0 +1,5 @@
+#!/bin/sh
+/sbin/modinfo -F filename nf_conntrack > /dev/null 2>&1
+if [ 0 -eq 0 ]; then
+    /sbin/modprobe nf_conntrack
+fi

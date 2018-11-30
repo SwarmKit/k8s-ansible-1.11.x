@@ -1,0 +1,89 @@
+- name: 禁用系統 swap
+  shell: "swapoff -a && sysctl -w vm.swappiness=0"
+  ignore_errors: true
+
+- name: 刪除 fatab swap相關配置
+  lineinfile:
+    dest: /etc/fstab
+    regexp: 'swap'
+    state: absent
+    backup: 'yes'
+
+- name: 臨時關閉 selinux
+  shell: "setenforce 0"
+  failed_when: false
+
+- name: 永久關閉 selinux
+  lineinfile:
+    dest: /etc/selinux/config
+    regexp: "^SELINUX="
+    line: "SELINUX=disabled"
+
+- name: 加載核 br_netfilter,ip_vs,nf_conntrack 模塊
+  copy:
+    src={{ item }}
+    dest=/etc/modules-load.d/{{ item }}
+    mode=0644
+  with_items:
+  - br_netfilter.conf
+  - nf_conntrack.conf
+  - ip_vs.conf
+
+- name: 臨時刪除系統 repofiles文件
+  file: path=/etc/yum.repos.d state=absent
+  
+- name: 創建系統repofiles文件夾
+  file: path=/etc/yum.repos.d state=directory
+
+- name: 添加 CentOS,epel reposfile
+  copy:
+    src={{ item }}
+    dest=/etc/yum.repos.d/{{ item }}
+  with_items:
+  - CentOS-Base-local.repo
+  - epel.repo
+  
+- name: 修改系統内核參數
+  template: src=95-k8s-sysctl.conf.j2 dest=/etc/sysctl.conf
+
+- name: 修改系統limit限制
+  template: src=30-k8s-ulimit.conf.j2 dest=/etc/security/limits.d/k8s-ulimit.conf 
+
+- name: 設置系統環境變量
+  template: src=99-k8s_profile.sh.j2 dest=/etc/profile.d/k8s_profile.sh
+  
+- name: 刪除 CentOS 默認安裝
+  yum:
+    name:
+      - firewalld
+      - python-firewall
+      - firewalld-filesystem
+    state: absent
+
+- name: 安裝系統基礎軟件包
+  yum:
+    name:
+      - conntrack-tools
+      - psmisc
+      - nfs-utils
+      - jq
+      - socat
+      - bash-completion
+      - rsync
+      - ipset
+      - ipvsadm
+      - chrony
+    state: latest
+
+- name: 複製時間同步配置文件chrony.conf
+  template:
+    src=chrony.conf.j2
+    dest=/etc/chrony.conf
+
+- name: 啟動時間同步服務
+  service:
+    name={{ item }}
+    state=restarted
+    enabled=yes
+  with_items:
+  - chronyd

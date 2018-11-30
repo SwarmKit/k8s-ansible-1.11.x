@@ -1,0 +1,51 @@
+[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=network.target
+
+[Service]
+ExecStart=/opt/kubernetes/bin/kube-apiserver \
+  --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota,NodeRestriction \
+  --advertise-address={{ inventory_hostname }} \
+  --bind-address={{ inventory_hostname }} \
+  --insecure-bind-address=127.0.0.1 \
+  --authorization-mode=Node,RBAC \
+  --kubelet-https=true \
+  --kubelet-client-certificate=/etc/kubernetes/ssl/admin.pem \
+  --kubelet-client-key=/etc/kubernetes/ssl/admin-key.pem \
+  --anonymous-auth=false \
+  --basic-auth-file=/etc/kubernetes/ssl/basic-auth.csv \
+  --service-cluster-ip-range={{ SERVICE_CIDR }} \
+  --service-node-port-range={{ NODE_PORT_RANGE }} \
+  --tls-cert-file=/etc/kubernetes/ssl/kubernetes.pem \
+  --tls-private-key-file=/etc/kubernetes/ssl/kubernetes-key.pem \
+  --client-ca-file=/etc/kubernetes/ssl/ca.pem \
+  --service-account-key-file=/etc/kubernetes/ssl/ca-key.pem \
+  --etcd-cafile=/etc/kubernetes/ssl/ca.pem \
+  --etcd-certfile=/etc/kubernetes/ssl/kubernetes.pem \
+  --etcd-keyfile=/etc/kubernetes/ssl/kubernetes-key.pem \
+  --etcd-servers={{ETCD_ENDPOINTS}} \
+  --enable-swagger-ui=true \
+  --endpoint-reconciler-type=lease \
+  --allow-privileged=true \
+  --audit-log-maxage=30 \
+  --audit-log-maxbackup=3 \
+  --audit-log-maxsize=100 \
+  --audit-log-path=/var/lib/audit.log \
+  --event-ttl=1h \
+  --requestheader-client-ca-file=/etc/kubernetes/ssl/ca.pem \
+  --requestheader-allowed-names= \
+  --requestheader-extra-headers-prefix=X-Remote-Extra- \
+  --requestheader-group-headers=X-Remote-Group \
+  --requestheader-username-headers=X-Remote-User \
+  --runtime-config=batch/v2alpha1=true \
+  --logtostderr=false \
+  --log-dir=/var/log/kubernetes \
+  --v=4
+Restart=on-failure
+RestartSec=5
+Type=notify
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

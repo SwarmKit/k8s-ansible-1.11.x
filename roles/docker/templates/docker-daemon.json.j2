@@ -1,0 +1,11 @@
+{
+  "insecure-registries":["images.ipebg.com","k8s.ipebg.com","kube.io"],
+  "registry-mirrors": ["https://ikx3xjlf.mirror.aliyuncs.com"],
+  "graph" : "/docker",
+  "storage-driver": "overlay2",
+  "storage-opts": ["overlay2.override_kernel_check=true"],
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+   }
+}

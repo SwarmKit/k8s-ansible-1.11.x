@@ -1,0 +1,77 @@
+#各運行Kubernetes節點上存放二進制文件的執行目錄
+BIN_DIR: /opt/kubernetes/bin
+
+# Ansible master主機上存放下載的協力廠商套裝軟體，預生成的CA證書，設定檔等目錄
+DATA_DIR: /opt/kubernetes/data
+
+#集群日誌目錄
+LOG_DIR: /var/log/kubernetes
+
+CONF_DIR: /etc/kubernetes/cfg
+
+#集群主機flannel網路主介面(默認eth0)
+HOST_INTERFACE: eth0
+
+# cfssl配置
+CFSSL_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/cfssl_linux-amd64"
+CFSSLJSON_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/cfssljson_linux-amd64"
+CFSSLCERTINFO_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/cfssl-certinfo_linux-amd64"
+CFSSL_DIR: "{{DATA_DIR}}/cfssl"
+
+CA_DIR: "{{DATA_DIR}}/ca"
+
+# etcd配置(需要與ansible inventory檔內容同步)
+
+ETCD_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/etcd-v3.3.7-linux-amd64.tar.gz"
+ETCD_DIR: "{{DATA_DIR}}/etcd-v3.3.7-linux-amd64"
+
+# flanneld配置
+FLANNEL_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/flannel-v0.10.0-linux-amd64.tar.gz"
+FLANNEL_DIR: "{{DATA_DIR}}/flannel"
+
+FLANNEL_ETCD_PREFIX: /kubernetes/network
+FLANNEL_ETCD_CONFIG: "{'Network':'{{CLUSTER_CIDR}}', 'SubnetLen': 24, 'Backend': {'Type': 'vxlan}}"
+
+# docker配置
+#DOCKER_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/docker-18.03.1-ce.tgz"
+DOCKER_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/docker-17.03.2-ce.tgz"
+DOCKER_DIR: "{{DATA_DIR}}/docker"
+
+# Kubernetes 配置
+MASTER_IP: 10.206.30.188
+
+KUBE_CLIENT_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/kubernetes/v1.11.4/kubernetes-client-linux-amd64.tar.gz"
+KUBE_CLIENT_DIR: "{{DATA_DIR}}/kubernetes/client/bin"
+
+KUBE_SERVER_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/kubernetes/v1.11.4/kubernetes-server-linux-amd64.tar.gz"
+KUBE_SERVER_DIR: "{{DATA_DIR}}/kubernetes/server/bin"
+
+KUBE_CLIENT_CONFIG: "{{DATA_DIR}}/kube_client_config"
+
+# 服務網段 (Service CIDR），部署前路由不可達，部署後集群內使用 IP:Port 可達
+SERVICE_CIDR: 10.254.0.0/16
+
+# POD 網段 (Cluster CIDR），部署前路由不可達，**部署後**路由可達 (flanneld 保證)
+CLUSTER_CIDR: 172.30.0.0/16
+
+# 服務埠範圍 (NodePort Range)
+NODE_PORT_RANGE: 30000-32767
+
+# 集群Master IP
+KUBE_APISERVER: https://{{MASTER_IP}}:8443
+
+# kubernetes 服務 IP (預分配，一般是 SERVICE_CIDR 中第一個IP)
+CLUSTER_KUBERNETES_SVC_IP: 10.254.0.1
+
+# 集群 DNS 服務 IP (從 SERVICE_CIDR 中預分配)
+CLUSTER_DNS_SVC_IP: 10.254.0.2
+
+# 集群 DNS 功能變數名稱
+CLUSTER_DNS_DOMAIN: cluster.local.
+
+# 時間服務器配置
+NTP_SERVER: "10.191.131.131"
+
+# 生成 EncryptionConfig 所需的加密 key
+# ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)
+ENCRYPTION_KEY: "SyRfn3zgNFZeUZDlQZF2zn0G2mrk9ktjNRQ/+cKOXVY="

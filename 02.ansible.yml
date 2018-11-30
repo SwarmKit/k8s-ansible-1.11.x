@@ -1,0 +1,10 @@
+# 準備集群所需的所有二進制文件（cfssl/etcd/flannel/kubernetes）
+---
+- hosts: deploy
+  gather_facts: False
+  remote_user: root
+  become: yes
+  become_method: sudo
+  roles:
+  - ansible
+  - genca

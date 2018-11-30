@@ -1,0 +1,63 @@
+# 準備集群所需的所有二進制文件（cfssl/etcd/flannel/kubernetes）
+---
+- name: 刪除 /opt/kubernetes/data 文件夾
+  file: 
+    path=/opt/kubernetes 
+    state=absent
+
+- name: 創建 /opt/kubernetes/data 文件夾
+  file:      
+    path=/opt/kubernetes/data/{{item}}
+    state=directory
+    mode=0644
+  with_items:
+  - cfssl
+  - flannel
+
+- name: 下載 {{CFSSL_URL}}
+  get_url:
+    url={{CFSSL_URL}}
+    dest={{CFSSL_DIR}}/cfssl_linux-amd64
+    mode=0740
+
+- name: 下載 {{CFSSLJSON_URL}}
+  get_url:
+    url={{CFSSLJSON_URL}}
+    dest={{CFSSL_DIR}}/cfssljson_linux-amd64
+    mode=0740
+ 
+- name: 下載 {{CFSSLCERTINFO_URL}}
+  get_url:
+    url={{CFSSLCERTINFO_URL}}
+    dest={{CFSSL_DIR}}/cfssl-certinfo_linux-amd64
+    mode=0740
+    
+- name: 下載並解壓 ETCD {{ETCD_URL}} 二進制安裝包
+  unarchive:
+    src={{ETCD_URL}}
+    dest={{DATA_DIR}}
+    remote_src=yes
+ 
+- name: 下載並解壓 FLANNEL {{FLANNEL_URL}} 二進制安裝包
+  unarchive:
+    src={{FLANNEL_URL}}
+    dest={{FLANNEL_DIR}}
+    remote_src=yes
+
+- name: 下載並解壓 DOCKER {{DOCKER_URL}} 二進制安裝包
+  unarchive:
+    src={{DOCKER_URL}}
+    dest={{DATA_DIR}}
+    remote_src=yes
+
+- name: 下載並解壓 KUBERNETES CLIENT {{KUBE_CLIENT_URL}} 二進制安裝包
+  unarchive:
+    src={{KUBE_CLIENT_URL}}
+    dest={{DATA_DIR}}
+    remote_src=yes
+
+- name: 下載並解壓 KUBERNETES SERVER {{KUBE_SERVER_URL}} 二進制安裝包
+  unarchive:
+    src={{KUBE_SERVER_URL}}
+    dest={{DATA_DIR}}
+    remote_src=yes

@@ -1,0 +1,9 @@
+# 安裝網絡插件 flannel
+---
+- hosts: flannel
+  gather_facts: False
+  remote_user: root
+  become: yes
+  become_method: sudo
+  roles:
+  - flannel

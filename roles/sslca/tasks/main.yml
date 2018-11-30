@@ -1,0 +1,32 @@
+# 複製CA 證書到各個節點
+---
+- name: 創建 /etc/kubernetes/ssl 目錄
+  file:
+    dest=/etc/kubernetes/ssl
+    state=directory
+
+- name: 創建 {{BIN_DIR}} 目錄
+  file: 
+    dest={{BIN_DIR}} 
+    state=directory mode=0740
+
+- name: 複製 CFSSL二進制執行文件
+  copy: 
+    src={{CFSSL_DIR}}/{{item.src}} 
+    dest={{BIN_DIR}}/{{item.dest}} 
+    mode=0540
+  with_items:
+  - { src: 'cfssl_linux-amd64', dest: 'cfssl' } 
+  - { src: 'cfssljson_linux-amd64', dest: 'cfssljson' } 
+  - { src: 'cfssl-certinfo_linux-amd64', dest: 'cfssl-certinfo' }
+
+- name: 分佈 CA證書
+  copy:
+    src={{CA_DIR}}/{{item}}
+    dest=/etc/kubernetes/ssl/{{item}}
+  with_items:
+  - ca-config.json
+  - ca.csr
+  - ca-csr.json
+  - ca-key.pem
+  - ca.pem

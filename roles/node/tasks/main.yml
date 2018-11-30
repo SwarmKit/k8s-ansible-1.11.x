@@ -1,0 +1,148 @@
+# 安裝kube-node
+---
+- name: 創建kube-node相關目錄
+  file: name={{ item }} state=directory
+  with_items:
+  - /root/.kube
+  - /etc/cni/net.d
+  - /var/log/kubernetes
+  
+- name: 複製kubectl二進制文件
+  copy:
+    src={{KUBE_CLIENT_DIR}}/kubectl 
+    dest={{BIN_DIR}}/kubectl 
+    mode=0540
+ 
+- name: 複製kubectl config設定檔
+  copy:
+    src={{KUBE_CLIENT_CONFIG}}/ 
+    dest=/root/.kube/config
+    mode=0440
+
+- name: 複製kubelet,kube-proxy,kubeadm二進位檔案
+  copy:
+    src={{KUBE_SERVER_DIR}}/{{item}} 
+    dest={{BIN_DIR}}/{{item}} 
+    mode=0540
+  with_items:
+  - kube-proxy
+  - kubelet
+  - kubeadm
+
+- name: 複製kubelet 腳本文件
+  template:
+    src=kubelet.sh.j2
+    dest=/tmp/kubelet.sh
+    mode=0755
+
+- name: 執行kubelet 腳本
+  shell: "sh /tmp/kubelet.sh"
+
+- name: 創建和分發kubelet 參數配置文件
+  template:
+    src=kubelet.config.json.j2
+    dest=/etc/kubernetes/kubelet.config.json
+
+- name: 創建/var/lib/kubelet目錄
+  file:
+    dest=/var/lib/kubelet
+    state=directory
+
+- name: 創建kubelet.service文件
+  template:
+    src=kubelet.service.j2
+    dest=/etc/systemd/system/kubelet.service
+
+- name: 重新加載systemd
+  command: systemctl daemon-reload
+
+- name: 啟動kubelet.service
+  service:
+    name=kubelet
+    state=restarted
+    enabled=yes
+
+- name: 生成kube-proxy-csr.json證書簽名請求
+  template:
+    src=kube-proxy-csr.json.j2
+    dest=./kube-proxy-csr.json
+
+- name: 創建 kube-proxy 證書
+  shell: "{{BIN_DIR}}/cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem -ca-key=/etc/kubernetes/ssl/ca-key.pem -config=/etc/kubernetes/ssl/ca-config.json -profile=kubernetes  kube-proxy-csr.json | {{BIN_DIR}}/cfssljson -bare kube-proxy"
+
+- name: 複製kube-proxy證書到/etc/kubernetes/ssl目錄
+  copy:
+    remote_src=true
+    src="{{item}}"
+    dest=/etc/kubernetes/ssl/{{item}}
+  with_items:
+  - kube-proxy.pem
+  - kube-proxy-key.pem
+
+- name: 創建kube-proxy kubeconfig檔(1) 設置集群參數
+  shell: "{{BIN_DIR}}/kubectl config set-cluster kubernetes --certificate-authority=/etc/kubernetes/ssl/ca.pem --embed-certs=true --server={{KUBE_APISERVER}} --kubeconfig=kube-proxy.kubeconfig"
+
+- name: 創建kube-proxy kubeconfig檔(2) 設置用戶端認證參數
+  shell: "{{BIN_DIR}}/kubectl config set-credentials kube-proxy --client-certificate=/etc/kubernetes/ssl/kube-proxy.pem --client-key=/etc/kubernetes/ssl/kube-proxy-key.pem --embed-certs=true --kubeconfig=kube-proxy.kubeconfig"
+
+- name: 創建kube-proxy kubeconfig檔(3) 設置上下文參數
+  shell: "{{BIN_DIR}}/kubectl config set-context default --cluster=kubernetes --user=kube-proxy --kubeconfig=kube-proxy.kubeconfig"
+
+- name: 創建kube-proxy kubeconfig檔(4) 設置默認上下文
+  shell: "{{BIN_DIR}}/kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig"
+
+- name: 複製kube-proxy.kubeconfig到/etc/kubernetes
+  copy:
+    remote_src=true
+    src="{{item}}"
+    dest=/etc/kubernetes/
+  with_items:
+  - kube-proxy.kubeconfig
+
+- name: 創建和分發kube-proxy 參數配置文件
+  template:
+    src=kube-proxy.config.yaml.j2
+    dest=/etc/kubernetes/kube-proxy.config.yaml
+
+- name: 創建/var/lib/kube-proxy目錄
+  file:
+    dest=/var/lib/kube-proxy
+    state=directory
+
+- name: 創建kube-proxy.service文件
+  template:
+    src=kube-proxy.service.j2
+    dest=/etc/systemd/system/kube-proxy.service
+
+- name: 重新載入systemd
+  command: systemctl daemon-reload
+
+- name: 啟動kube-proxy.service
+  service:
+    name=kube-proxy
+    state=restarted
+    enabled=yes
+
+- name: 获取csr 请求信息
+  shell: "sleep 3 && {{ BIN_DIR }}/kubectl get csr"
+  delegate_to: "{{ groups['kube-master'][0] }}"
+  register: csr_info
+  run_once: true
+
+- name: approve-kubelet-csr
+  shell: "{{ BIN_DIR }}/kubectl get csr|grep 'Pending' | awk 'NR>0{print $1}'| xargs {{ BIN_DIR }}/kubectl certificate approve"
+  when: '"Pending" in csr_info.stdout'
+  delegate_to: "{{ groups['kube-master'][0] }}"
+  run_once: true
+
+- name: 清除臨時文件
+  file:
+    path="{{item}}"
+    state=absent
+  with_items:
+  - bootstrap.kubeconfig
+  - kube-proxy.kubeconfig
+  - kube-proxy.csr
+  - kube-proxy-csr.json
+  - kube-proxy.pem
+  - kube-proxy-key.pem

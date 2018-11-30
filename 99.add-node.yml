@@ -1,0 +1,13 @@
+# 安裝kube-node
+---
+- hosts: new-node
+  gather_facts: False
+  remote_user: root
+  become: yes
+  become_method: sudo
+  roles:
+  - prepare
+  - sslca
+  - flannel
+  - docker
+  - node

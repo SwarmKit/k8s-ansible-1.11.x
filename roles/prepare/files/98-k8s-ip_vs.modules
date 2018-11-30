@@ -1,0 +1,5 @@
+#!/bin/sh
+/sbin/modinfo -F filename ip_vs > /dev/null 2>&1
+if [ 0 -eq 0 ]; then
+    /sbin/modprobe ip_vs
+fi

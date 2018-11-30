@@ -1,0 +1,9 @@
+# 配置安裝HALB 組件
+---
+- hosts: lb
+  gather_facts: False
+  remote_user: root
+  become: yes
+  become_method: sudo
+  roles:
+  - lb

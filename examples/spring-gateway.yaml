@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: spring-gateway
+  namespace: default
+  labels:
+    app: spring-gateway
+spec:
+  selector:
+    matchLabels:
+      name: spring-gateway
+  template:
+    metadata:
+      labels:
+        name: spring-gateway
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - env:
+        - name: TIME
+          value: "20181122"
+        - name: VERSION
+          value: "1.2"
+        name: spring-gateway
+        image:  k8s.ipebg.com/apps/spring-gateway:v2.2
+        ports:
+        - containerPort: 5555

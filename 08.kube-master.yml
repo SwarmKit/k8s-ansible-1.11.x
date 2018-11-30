@@ -1,0 +1,9 @@
+# 安裝kube-master
+---
+- hosts: kube-master
+  gather_facts: False
+  remote_user: root
+  become: yes
+  become_method: sudo
+  roles:
+  - master
