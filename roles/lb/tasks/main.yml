@@ -32,18 +32,16 @@
   shell: systemctl daemon-reload
   tags: restart_lb
 
-- name: 開機自啟haproxy服務
-  shell: systemctl enable haproxy
-  ignore_errors: true 
-
-- name: 重啟 haproxy服務
-  shell: systemctl restart haproxy
-  tags: restart_lb
-
-- name: 開機自啟 keepalived服務
-  shell: systemctl enable keepalived
+- name: 開機自啟haproxy,keepalived服務
+  shell: systemctl enable {{item}}
+  with_items:
+  - haproxy
+  - keepalived
   ignore_errors: true
 
-- name: 重啟 keepalived服務
-  shell: systemctl restart keepalived
-  tags: restart_lb
+- name: 重啟 haproxy,keepalived 服務
+  service: name={{item}} state=restarted enabled=yes
+  with_items:
+  - haproxy
+  - keepalived
+  tags: restart_lbb

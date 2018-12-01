@@ -1,10 +1,7 @@
 # 安裝kube-master
 ---
 - name: 關閉 kube-apiserver,kube-controller-manager,kube-scheduler
-  service:
-    name={{item}}
-    state=restarted
-    enabled=yes
+  service: name={{item}} state=stopped enabled=yes
   with_items:
   - kube-apiserver
   - kube-controller-manager
@@ -12,46 +9,31 @@
   ignore_errors: yes
 
 - name: 刪除 {{LOG_DIR}} 文件夾
-  file: 
-    path={{LOG_DIR}}
-    state=absent
+  file: path={{LOG_DIR}} state=absent
 
 - name: 創建 {{BIN_DIR}},{{CONF_DIR}},{{LOG_DIR}} 目錄
-  file:
-    dest="{{item}}"
-    state=directory
-    mode=0740
+  file: dest="{{item}}" state=directory mode=0740
   with_items:
   - "{{BIN_DIR}}"
   - "{{CONF_DIR}}"
   - "{{LOG_DIR}}"
 
 - name: 複製 kubectl二進制執行文件
-  copy:
-    src={{KUBE_CLIENT_DIR}}/{{item}} 
-    dest={{BIN_DIR}}/{{item}} 
-    mode=0540
+  copy: src={{KUBE_CLIENT_DIR}}/{{item}} dest={{BIN_DIR}}/{{item}} mode=0540
   with_items:
   - kubectl
 
 - name: 生成 admin-csr.json 證書簽名請求
-  template: 
-    src=admin-csr.json.j2 
-    dest=./admin-csr.json
+  template: src=admin-csr.json.j2 dest=./admin-csr.json
 
 - name: 创建 encryption-config.yaml 加密配置文件
-  template:
-    src=encryption-config.yaml.j2
-    dest=/etc/kubernetes/cfg/encryption-config.yaml
+  template: src=encryption-config.yaml.j2 dest=/etc/kubernetes/cfg/encryption-config.yaml
 
 - name: 生成 admin 證書和私鑰
   shell: "{{BIN_DIR}}/cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem -ca-key=/etc/kubernetes/ssl/ca-key.pem -config=/etc/kubernetes/ssl/ca-config.json -profile=kubernetes ./admin-csr.json | {{BIN_DIR}}/cfssljson -bare admin"
 
 - name: 複製 admin 證書到 /etc/kubernetes/ssl目錄
-  copy: 
-    remote_src=true 
-    src="{{item}}" 
-    dest=/etc/kubernetes/ssl/{{item}}
+  copy: remote_src=true src="{{item}}" dest=/etc/kubernetes/ssl/{{item}}
   with_items:
   - admin.pem
   - admin-key.pem
@@ -69,16 +51,10 @@
   shell: "{{BIN_DIR}}/kubectl config use-context kubernetes"
 
 - name: 獲取生成的用於 kubectl的config配置文件
-  fetch:
-    src=/root/.kube/config
-    dest=/opt/kubernetes/data/kube_client_config
-    flat=yes
+  fetch: src=/root/.kube/config dest=/opt/kubernetes/data/kube_client_config flat=yes
 
 - name: 複製 kube-apiserver,kube-controller-manager,kube-scheduler,kube-proxy,kubelet,kubeadm 二進制文件
-  copy:
-    src={{KUBE_SERVER_DIR}}/{{item}} 
-    dest={{BIN_DIR}}/{{item}} 
-    mode=0540
+  copy: src={{KUBE_SERVER_DIR}}/{{item}} dest={{BIN_DIR}}/{{item}} mode=0540
   with_items:
   - kube-apiserver
   - kube-controller-manager
@@ -88,87 +64,52 @@
   - kubeadm
 
 - name: 生成 kubernetes-csr.json 證書簽名請求
-  template: 
-    src=kubernetes-csr.json.j2 
-    dest=./kubernetes-csr.json
+  template: src=kubernetes-csr.json.j2 dest=./kubernetes-csr.json
 
 - name: 生成 kubernetes 證書和私鑰
   shell: "{{BIN_DIR}}/cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem -ca-key=/etc/kubernetes/ssl/ca-key.pem -config=/etc/kubernetes/ssl/ca-config.json -profile=kubernetes ./kubernetes-csr.json | {{BIN_DIR}}/cfssljson -bare kubernetes"
 
 - name: 複製 kubernetes 證書到 /etc/kubernetes/ssl目錄
-  copy: 
-    remote_src=true 
-    src="{{item}}" 
-    dest=/etc/kubernetes/ssl/{{item}}
+  copy: remote_src=true src="{{item}}" dest=/etc/kubernetes/ssl/{{item}}
   with_items:
   - kubernetes.pem
   - kubernetes-key.pem
 
 - name: 創建 kube-apiserver.service文件
-  copy: 
-    src=kube-apiserver.service
-    dest=/etc/systemd/system/kube-apiserver.service
-
+  copy: src=kube-apiserver.service dest=/etc/systemd/system/kube-apiserver.service
+  
 - name: 創建 kube-apiserver配置文件
-  template:
-    src=kube-apiserver.j2
-    dest={{CONF_DIR}}/kube-apiserver
+  template: src=kube-apiserver.j2 dest={{CONF_DIR}}/kube-apiserver
+  
+- name: 創建 kube-controller-manager.service文件
+  copy: src=kube-controller-manager.service dest=/etc/systemd/system/kube-controller-manager.service
+  
+- name: 創建 kube-controller-manager配置文件
+  template: src=kube-controller-manager.j2 dest={{CONF_DIR}}/kube-controller-manager
+  
+- name: 創建 kube-scheduler.service文件
+  copy: src=kube-scheduler.service dest=/etc/systemd/system/kube-scheduler.service
 
-- name: 重新加載 systemd
+- name: 創建 kube-scheduler配置文件
+  template: src=kube-scheduler.j2 dest={{CONF_DIR}}/kube-scheduler  
+  
+- name: 重新加載 systemd-reload
   command: systemctl daemon-reload
 
 - name: 啟動 kube-apiserver
-  service:
-    name=kube-apiserver
-    state=restarted
-    enabled=yes
-
-- name: 等待 kube-apiserver 8080端口打开
-  wait_for: port=8080 state=started delay=3
-
-- name: 創建 kube-controller-manager.service文件
-  copy: 
-    src=kube-controller-manager.service
-    dest=/etc/systemd/system/kube-controller-manager.service
-
-- name: 創建 kube-controller-manager配置文件
-  template:     
-    src=kube-controller-manager.j2
-    dest={{CONF_DIR}}/kube-controller-manager
-
-- name: 重新加載 systemd
-  command: systemctl daemon-reload
+  service: name=kube-apiserver state=restarted enabled=yes
+  
+- name: 等待 kube-apiserver 服務器正常啟動
+  pause: seconds=15
 
 - name: 啟動 kube-controller-manager 服務
-  service:
-    name=kube-controller-manager
-    state=restarted
-    enabled=yes
-
-- name: 創建 kube-scheduler.service文件
-  copy:    
-    src=kube-scheduler.service
-    dest=/etc/systemd/system/kube-scheduler.service
-
-- name: 創建 kube-scheduler配置文件
-  template:
-    src=kube-scheduler.j2
-    dest={{CONF_DIR}}/kube-scheduler
-
-- name: 重新加載 systemd
-  command: systemctl daemon-reload
+  service: name=kube-controller-manager state=restarted enabled=yes
 
 - name: 啟動 kube-scheduler 服務
-  service:
-    name=kube-scheduler
-    state=restarted
-    enabled=yes
+  service: name=kube-scheduler state=restarted enabled=yes
 
 - name: 授予Kubernetes證書訪問kubelet API的權限及綁定角色權限
-  copy:
-    src=kubeapi.sh
-    dest=/tmp/kubeapi.sh
-    mode=0755
+  copy: src=kubeapi.sh dest=/tmp/kubeapi.sh mode=0755
 
 - name: 获取角色绑定信息kubelet-bootstrap,kubelet-apis
   shell : "{{BIN_DIR}}/kubectl get clusterrolebinding"
@@ -184,9 +125,7 @@
   ignore_errors: True
 
 - name: 清除臨時文件
-  file:
-    path="{{item}}"
-    state=absent
+  file: path="{{item}}" state=absent
   with_items:
   - admin.csr
   - admin-csr.json

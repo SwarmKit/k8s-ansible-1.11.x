@@ -1,44 +1,30 @@
 ---
 - name: 創建 {{BIN_DIR}}目錄
-  file:
-    dest={{BIN_DIR}} 
-    state=directory mode=0740
+  file: dest={{BIN_DIR}} state=directory mode=0740
 
 - name: 複製 flannel 二進制執行、腳本文件
-  copy:
-    src={{FLANNEL_DIR}}/{{item}} 
-    dest={{BIN_DIR}}/{{item}} 
-    mode=0540
+  copy: src={{FLANNEL_DIR}}/{{item}} dest={{BIN_DIR}}/{{item}} mode=0540
   with_items:
   - flanneld
   - mk-docker-opts.sh
 
 - name: 創建 /etc/flanneld/ssl 目錄
-  file: 
-    dest=/etc/flanneld/ssl
-    state=directory mode=0640
+  file: dest=/etc/flanneld/ssl state=directory mode=0640
 
 - name: 生成 flanneld-csr.json 證書簽名請求
-  template: 
-    src=flanneld-csr.json.j2 
-    dest=./flanneld-csr.json
+  template: src=flanneld-csr.json.j2 dest=./flanneld-csr.json
 
 - name: 生成 flanneld 證書和私鑰
   shell: "{{BIN_DIR}}/cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem -ca-key=/etc/kubernetes/ssl/ca-key.pem -config=/etc/kubernetes/ssl/ca-config.json -profile=kubernetes flanneld-csr.json | {{BIN_DIR}}/cfssljson -bare flanneld" 
 
 - name: 複製 flanneld 證書到 /etc/flanneld/ssl目錄
-  copy: 
-    remote_src=true 
-    src="{{item}}" 
-    dest=/etc/flanneld/ssl/{{item}}
+  copy: remote_src=true src="{{item}}" dest=/etc/flanneld/ssl/{{item}}
   with_items:
   - flanneld.pem
   - flanneld-key.pem
 
 - name: 生成 flannel 用於etcd的配置文件
-  template: 
-    src=flanneld-cfg.json.j2 
-    dest=./flanneld-cfg.json
+  template: src=flanneld-cfg.json.j2 dest=./flanneld-cfg.json
   run_once: true
   delegate_to: "{{groups['etcd'][0]}}"
 
@@ -48,23 +34,16 @@
   delegate_to: "{{ groups['etcd'][0] }}"
 
 - name: 生成 flanneld.service 服務配置
-  template:
-    src=flanneld.service.j2
-    dest=/etc/systemd/system/flanneld.service
+  template: src=flanneld.service.j2 dest=/etc/systemd/system/flanneld.service
 
 - name: 重新加載 systemd
   command: systemctl daemon-reload
 
 - name: 啟動 flanneld
-  service:
-    name=flanneld
-    state=restarted
-    enabled=yes
+  service: name=flanneld state=restarted enabled=yes
 
 - name: 清除臨時文件
-  file: 
-    path="{{item}}"
-    state=absent
+  file: path="{{item}}" state=absent
   with_items:
   - flanneld.csr
   - flanneld-csr.json
