@@ -1,5 +1,15 @@
 # 安裝kube-node
 ---
+- name: 關閉 kubelet,kube-proxy
+  service: name={{item}} state=stopped enabled=yes
+  with_items:
+  - kubelet
+  - kube-proxy
+  ignore_errors: yes
+
+- name: 刪除{{LOG_DIR}} 文件夾
+  file: path={{LOG_DIR}} state=absent
+
 - name: 創建kube-node相關目錄
   file: name={{ item }} state=directory
   with_items:
@@ -16,12 +26,18 @@
   - kubelet
   - kubeadm
   - kubectl
+   
+- name: 複製kubectl config設定檔
+  copy: src={{KUBE_CLIENT_CONFIG}}/ dest=/root/.kube/config mode=0440
 
 - name: 複製kubelet 腳本文件
   template: src=kubelet.sh.j2 dest=/tmp/kubelet.sh mode=0755
 
 - name: 執行kubelet 腳本
   shell: "sh /tmp/kubelet.sh"
+  
+- name: 創建和分發kubelet 參數配置文件
+  template: src=kubelet.config.json.j2 dest=/etc/kubernetes/kubelet.config.json
 
 - name: 創建kubelet.service文件
   template: src=kubelet.service.j2 dest=/etc/systemd/system/kubelet.service
@@ -65,7 +81,7 @@
   command: systemctl daemon-reload
 
 - name: 啟動kube-proxy,kubelet 服務
-  service: name=kube-proxy state=restarted enabled=yes
+  service: name={{item}} state=restarted enabled=yes
   with_items:
   - kubelet
   - kube-proxy
