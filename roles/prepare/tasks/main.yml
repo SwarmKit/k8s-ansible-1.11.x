@@ -34,12 +34,11 @@
 - name: 創建系統repofiles文件夾
   file: path=/etc/yum.repos.d state=directory
    
-- name: 添加 CentOS,epel,kubeadm repofiles
+- name: 添加 CentOS,epel repofiles
   template: src={{ item.src }} dest=/etc/yum.repos.d/{{ item.dst }}
   with_items:
   - { src: 'CentOS-Base-local.repo.j2', dst: 'CentOS-Base-local.repo' }
   - { src: 'epel.repo.j2', dst: 'epel.repo' }
-  - { src: 'kubeadm.repo.j2', dst: 'kubeadm.repo' }
   
 - name: 修改系統内核參數
   template: src={{ item.src }} dest={{ item.dst }}
