@@ -37,7 +37,7 @@
   shell: "sh /tmp/kubelet.sh"
   
 - name: 創建和分發kubelet 參數配置文件
-  template: src=kubelet.config.json.j2 dest=/etc/kubernetes/kubelet.config.json
+  template: src=kubelet.config.yaml.j2 dest=/etc/kubernetes/kubelet.config.yaml
 
 - name: 創建kubelet.service文件
   template: src=kubelet.service.j2 dest=/etc/systemd/system/kubelet.service
