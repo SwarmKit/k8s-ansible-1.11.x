@@ -69,8 +69,8 @@ KUBE_API_ARGS="--authorization-mode=Node,RBAC \
 --kubelet-client-certificate=/etc/kubernetes/ssl/kubernetes.pem \
 --kubelet-client-key=/etc/kubernetes/ssl/kubernetes-key.pem \
 --kubelet-timeout=6s \
---anonymous-auth=false \
---service-node-port-range=30000-32767 \
+--anonymous-auth=true \
+--service-node-port-range=30000-50000 \
 --service-account-key-file=/etc/kubernetes/ssl/ca-key.pem \
 --enable-swagger-ui=true \
 --apiserver-count=2 \
@@ -80,9 +80,12 @@ KUBE_API_ARGS="--authorization-mode=Node,RBAC \
 --audit-log-maxsize=100 \
 --audit-log-path=/var/lib/audit.log \
 --requestheader-client-ca-file=/etc/kubernetes/ssl/ca.pem \
---requestheader-allowed-names= \
+--requestheader-allowed-names=aggregator \
 --requestheader-extra-headers-prefix=X-Remote-Extra- \
 --requestheader-group-headers=X-Remote-Group \
 --requestheader-username-headers=X-Remote-User \
+--proxy-client-cert-file=/etc/kubernetes/ssl/metrics-server.pem \
+--proxy-client-key-file=/etc/kubernetes/ssl/metrics-server-key.pem \
+--enable-aggregator-routing=true \
 --runtime-config=api/all=true \
 --event-ttl=1h"

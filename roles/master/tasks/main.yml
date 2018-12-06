@@ -66,14 +66,22 @@
 - name: 生成 kubernetes-csr.json 證書簽名請求
   template: src=kubernetes-csr.json.j2 dest=./kubernetes-csr.json
 
+- name: 生成 kubernetes-csr.json 證書簽名請求
+  template: src=metrics-server-csr.json.j2 dest=./metrics-server-csr.json
+
 - name: 生成 kubernetes 證書和私鑰
   shell: "{{BIN_DIR}}/cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem -ca-key=/etc/kubernetes/ssl/ca-key.pem -config=/etc/kubernetes/ssl/ca-config.json -profile=kubernetes ./kubernetes-csr.json | {{BIN_DIR}}/cfssljson -bare kubernetes"
 
-- name: 複製 kubernetes 證書到 /etc/kubernetes/ssl目錄
+- name: 生成 metrics-server 證書和私鑰
+  shell: "{{BIN_DIR}}/cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem -ca-key=/etc/kubernetes/ssl/ca-key.pem -config=/etc/kubernetes/ssl/ca-config.json -profile=kubernetes ./metrics-server-csr.json | {{BIN_DIR}}/cfssljson -bare metrics-server"
+
+- name: 複製 kubernetes,metrics-server 證書到 /etc/kubernetes/ssl目錄
   copy: remote_src=true src="{{item}}" dest=/etc/kubernetes/ssl/{{item}}
   with_items:
   - kubernetes.pem
   - kubernetes-key.pem
+  - metrics-server.pem
+  - metrics-server-key.pem
 
 - name: 創建 kube-apiserver.service文件
   copy: src=kube-apiserver.service dest=/etc/systemd/system/kube-apiserver.service
@@ -135,3 +143,7 @@
   - kubernetes-csr.json
   - kubernetes.pem
   - kubernetes-key.pem
+  - metrics-server.csr
+  - metrics-server-csr.json
+  - metrics-server.pem
+  - metrics-server-key.pem

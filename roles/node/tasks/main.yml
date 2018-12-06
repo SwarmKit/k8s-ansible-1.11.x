@@ -45,14 +45,22 @@
 - name: 生成kube-proxy-csr.json證書簽名請求
   template: src=kube-proxy-csr.json.j2 dest=./kube-proxy-csr.json
 
+- name: 生成kube-proxy-csr.json證書簽名請求
+  template: src=kubelet-csr.json.j2 dest=./kubelet-csr.json
+
 - name: 創建 kube-proxy 證書
-  shell: "{{BIN_DIR}}/cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem -ca-key=/etc/kubernetes/ssl/ca-key.pem -config=/etc/kubernetes/ssl/ca-config.json -profile=kubernetes  kube-proxy-csr.json | {{BIN_DIR}}/cfssljson -bare kube-proxy"
+  shell: "{{BIN_DIR}}/cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem -ca-key=/etc/kubernetes/ssl/ca-key.pem -config=/etc/kubernetes/ssl/ca-config.json -profile=kubernetes kube-proxy-csr.json | {{BIN_DIR}}/cfssljson -bare kube-proxy"
+
+- name: 創建 kubelet 證書
+  shell: "{{BIN_DIR}}/cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem -ca-key=/etc/kubernetes/ssl/ca-key.pem -config=/etc/kubernetes/ssl/ca-config.json -profile=kubernetes kubelet-csr.json | {{BIN_DIR}}/cfssljson -bare kubelet"
 
 - name: 複製kube-proxy證書到/etc/kubernetes/ssl目錄
   copy: remote_src=true src="{{item}}" dest=/etc/kubernetes/ssl/{{item}}
   with_items:
   - kube-proxy.pem
   - kube-proxy-key.pem
+  - kubelet.pem
+  - kubelet-key.pem
 
 - name: 創建kube-proxy kubeconfig檔(1) 設置集群參數
   shell: "{{BIN_DIR}}/kubectl config set-cluster kubernetes --certificate-authority=/etc/kubernetes/ssl/ca.pem --embed-certs=true --server={{KUBE_APISERVER}} --kubeconfig=kube-proxy.kubeconfig"
@@ -67,7 +75,7 @@
   shell: "{{BIN_DIR}}/kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig"
 
 - name: 複製kube-proxy.kubeconfig到/etc/kubernetes
-  copy: remote_src=true src="{{item}}" dest=/etc/kubernetes/
+  copy: remote_src=true src={{ item }} dest=/etc/kubernetes/
   with_items:
   - kube-proxy.kubeconfig
 
@@ -108,3 +116,19 @@
   - kube-proxy.pem
   - kube-proxy-key.pem
   - kubelet-bootstrap-{{KUBE_NAME}}.kubeconfig
+  - kubelet-csr.json
+  - kubelet.csr
+  - kubelet-key.pem
+  - kubelet.pem
+
+- name: 複製kubelet證書和key
+  copy: remote_src=true src=/etc/kubernetes/ssl/{{ item.src }} dest=/etc/kubernetes/cert/{{ item.dest }}
+  with_items:
+  - { src: 'kubelet.pem', dest: 'kubelet.crt' }
+  - { src: 'kubelet-key.pem', dest: 'kubelet.key' }
+
+- name: 重新啟動kubelet服務 
+  service: name={{item}} state=restarted enabled=yes
+  with_items:
+  - kubelet
+
