@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ##DEPLOY##
+  namespace: default
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: ##DEPLOY##
+    spec:
+      containers:
+      - name: ##DEPLOY##
+        image: kube.io/app/jarname-time-version1.0g:v0.3
+        imagePullPolicy: Always
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /isLive
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 3
+          successThreshold: 1
+          timeoutSeconds: 2
+        ports:
+        - containerPort: 8080
+        env:
+        - name: JARNAME
+          value: ##NAME##
+        - name: TIME
+          value: "##TIME##"
+        - name: VERSION
+          value: "##VERSION##"

@@ -1,0 +1,22 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: eureka-02
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: eureka02
+    spec:
+      containers:
+      - name: eureka02
+        image: k8s.ipebg.com/apps/spring-eureka:v1.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        env:
+        - name: SERVER
+          value: eureka-02

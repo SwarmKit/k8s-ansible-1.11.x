@@ -1,0 +1,11 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: glusterfs
+provisioner: kubernetes.io/glusterfs
+parameters:
+  resturl: "http://10.207.237.74:8088"
+  restuser: "admin"
+  gidMin: "40000"
+  gidMax: "50000"
+  volumetype: "replicate:2"
