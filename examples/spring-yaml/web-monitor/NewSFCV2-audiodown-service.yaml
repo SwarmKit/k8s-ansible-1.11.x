@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: newsfcv2-audiodown-service-web
+spec:
+  selector:
+    run: newsfcv2-audiodown-service
+  type: NodePort
+  ports:
+  - name: web
+    port: 80
+    targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: newsfcv2-audiodown-service
+  namespace: default
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: newsfcv2-audiodown-service
+    spec:
+      containers:
+      - name: newsfcv2-audiodown-service
+        image: kube.io/app/jarname-time-version1.0g:v0.3
+        imagePullPolicy: Always
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /isLive
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 3
+          successThreshold: 1
+          timeoutSeconds: 2
+        ports:
+        - containerPort: 8080
+        env:
+        - name: JARNAME
+          value: NewSFCV2-audiodown-service
+        - name: TIME
+          value: "20181212"
+        - name: VERSION
+          value: "1.0"

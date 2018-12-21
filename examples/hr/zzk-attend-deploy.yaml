@@ -1,0 +1,35 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: zzk-attendweb-system
+  namespace: default
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: zzk-attendweb-system
+    spec:
+      containers:
+      - name: zzk-attendweb-system
+        image: images.ipebg.com/apps/attendweb:v0.1
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: "/logs"
+          name: logs
+        ports:
+        - containerPort: 80
+        env:
+        - name: DATABASE
+          value: "0"
+        - name: REDIS
+          value: "10.195.224.133"
+        - name: TIME
+          value: "20181220"
+        - name: ZONE
+          value: "ipebg_zzk"
+      volumes:
+      - name: logs
+        persistentVolumeClaim:
+          claimName: zzk-attendweb-system

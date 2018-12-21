@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zzk-attendweb-system-ui
+spec:
+  selector:
+    run: zzk-attendweb-system
+  type: NodePort
+  ports:
+  - name: web
+    port: 80
+    targetPort: 80

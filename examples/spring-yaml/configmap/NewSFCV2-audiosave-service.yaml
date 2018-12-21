@@ -1,0 +1,36 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: newsfcv2-audiosave-service
+  namespace: default
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: newsfcv2-audiosave-service
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: newsfcv2-audiosave-service
+        image: kube.io/app/jarname-time-version1.0g:v0.3
+        imagePullPolicy: Always
+        ports:
+        - name: liveness-port
+          containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /isLive
+            port: liveness-port
+          initialDelaySeconds: 60
+          periodSeconds: 3
+        env:
+        - name: JARNAME
+          valueFrom:
+            configMapKeyRef:
+              name: newsfcv2-audiosave-service
+              key: special.jarname
+        - name: TIME
+          value: "20181212"
+        - name: VERSION
+          value: "1.0"

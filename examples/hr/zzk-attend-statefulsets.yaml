@@ -1,0 +1,40 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: zzk-attend
+spec:
+  serviceName: "zzk-attendweb"
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        run: zzk-attendweb-system
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: zzk-attendweb
+        image: images.ipebg.com/apps/attendweb:v0.1
+        ports:
+        - containerPort: 80
+          name: zzk-attendweb
+        env:
+        - name: DATABASE
+          value: "0"
+        - name: REDIS
+          value: "10.195.224.133"
+        - name: TIME
+          value: "20181220"
+        - name: ZONE
+          value: "ipebg_zzk"
+        volumeMounts:
+        - name: web
+          mountPath: /logs
+  volumeClaimTemplates:
+  - metadata:
+      name: web
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ceph-rbd
+      resources:
+        requests:
+          storage: 5Gi

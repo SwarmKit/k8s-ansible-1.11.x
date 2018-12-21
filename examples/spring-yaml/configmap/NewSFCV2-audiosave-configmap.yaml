@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: newsfcv2-audiosave-service
+  namespace: default
+data:
+  special.jarname: NewSFCV2-audiosave-service 
